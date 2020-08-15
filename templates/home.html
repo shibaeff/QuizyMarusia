@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<title>Marusia Quizy</title>
+<head>
+    <link
+            rel="shortcut icon"
+            type="image/x-icon"
+            href="https://user-images.githubusercontent.com/20112458/49326597-773b7280-f57a-11e8-853d-20ed61d18b0d.png"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+        }
+
+        h1 {
+            background-color: yellow;
+            display: inline-block;
+            font-size: 3em;
+            margin: 0;
+            padding: 14px;
+        }
+
+        h3 {
+            color: black;
+            font-size: 20px;
+            margin-top: 3px;
+            text-align: center;
+        }
+
+        #chatbox {
+            margin-left: auto;
+            margin-right: auto;
+            width: 40%;
+            margin-top: 60px;
+        }
+
+        img {
+            -webkit-animation: mover 2s infinite alternate;
+            animation: mover 2s infinite alternate;
+        }
+
+        @-webkit-keyframes mover {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes mover {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(-20px);
+            }
+        }
+
+        #userInput {
+            margin-left: auto;
+            margin-right: auto;
+            width: 40%;
+            margin-top: 60px;
+        }
+
+        #textInput {
+            width: 90%;
+            border: none;
+            border-bottom: 3px solid black;
+            font-family: monospace;
+            font-size: 17px;
+        }
+
+        .userText {
+            color: white;
+            font-family: monospace;
+            font-size: 17px;
+            text-align: right;
+            line-height: 30px;
+        }
+
+        .userText span {
+            background-color: #808080;
+            padding: 10px;
+            border-radius: 2px;
+        }
+
+        .botText {
+            color: white;
+            font-family: monospace;
+            font-size: 17px;
+            text-align: left;
+            line-height: 30px;
+        }
+
+        .botText span {
+            background-color: #4169e1;
+            padding: 10px;
+            border-radius: 2px;
+        }
+
+        #tidbit {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 300px;
+        }
+
+        .boxed {
+            margin-left: auto;
+            margin-right: auto;
+            width: 78%;
+            margin-top: 60px;
+            border: 1px solid green;
+        }
+
+        .box {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+<img/>
+<center>
+    <h1>
+        <img
+                src="https://static.tildacdn.com/tild6362-6331-4962-b536-373863306465/logo-02_1.png"
+                alt="Marusia Quizy"
+                style="width:40px;height:40px;"
+        />Quizy Marusia
+    </h1>
+</center>
+<h3>
+    <p>
+        You know, воу!
+    </p>
+</h3>
+<div class="box"></div>
+<div class="boxed">
+    <div>
+        <div id="chatbox">
+            <img
+                    src="https://static.tildacdn.com/tild6362-6331-4962-b536-373863306465/logo-02_1.png"
+                    alt="Marusia Quizy"
+                    style="width:40px;height:40px;"
+            />
+            <p class="botText">
+            <span>Привет, я Quizy. Меня создали специально для MARUSIA GAME CHALLENGE. Сегодня мы сыграем в популярную в США игру - Trivia!
+            Я тебе задам тебе 5 вопросов (на анлийском). Твоя задача - полагаясь на удачу и смекалку - правильно и быстро дать ответ! Are you ready?</span>
+            </p>
+        </div>
+        <div id="userInput">
+            <input id="textInput" type="text" name="msg" placeholder="Message"/>
+        </div>
+    </div>
+    <script>
+        function getBotResponse() {
+            var rawText = $("#textInput").val();
+            var userHtml = '<p class="userText"><span>' + rawText + "</span></p>";
+            $("#textInput").val("");
+            $("#chatbox").append(userHtml);
+            document
+                .getElementById("userInput")
+                .scrollIntoView({block: "start", behavior: "smooth"});
+            $.get("/get", {msg: rawText}).done(function (data) {
+                var botHtml = '<p class="botText"><span>' + data + "</span></p>";
+                $("#chatbox").append(botHtml);
+                document
+                    .getElementById("userInput")
+                    .scrollIntoView({block: "start", behavior: "smooth"});
+            });
+        }
+
+        $("#textInput").keypress(function (e) {
+            if (e.which == 13) {
+                getBotResponse();
+            }
+        });
+    </script>
+</div>
+</body>
+</html>
