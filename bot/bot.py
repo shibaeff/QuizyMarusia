@@ -1,10 +1,12 @@
-from pytrivia import Trivia
 import logging
+
+from pytrivia import Trivia, Diffculty, Type
 
 STATE = "state"
 NUM_QUESTIONS = "num questions"
 QUESTIONS = "1"
 GAME = "3"
+WAITING_FOR_ANSWER = "4"
 QUESTIONS_LIST = "questions"
 QCOUNTER = "qcounter"
 
@@ -15,38 +17,56 @@ class Bot(object):
         self.id = id
         logging.basicConfig(level=logging.INFO)
 
-
     def get_questions(self, session):
-        session[QUESTIONS_LIST] = self.trivia.request(session[NUM_QUESTIONS])['results']
+        session[QUESTIONS_LIST] = self.trivia.request(session[NUM_QUESTIONS], None, Diffculty.Easy, Type.True_False)[
+            'results']
         logging.info("obtaining questions")
 
-    def Handle(self, session, text: str):
+    def recognize_ans(self, ans):
         try:
-            if STATE not in session or session[STATE] is None:
-                session[STATE] = QUESTIONS
-                return "Сколько вопросов будем играть?"
-            elif session[STATE] == QUESTIONS:
-                try:
-                    session[NUM_QUESTIONS] = int(text)
-                except:
-                    return "Не поняла, введи число заново"
-                session[STATE] = GAME
-                return "Ищу вопросы. Приготовьтесь! Когда будете готовы, напишите что-нибудь."
-            elif session[STATE] == GAME:
-                if QCOUNTER not in session or session[QCOUNTER] == 0 or session[QCOUNTER] is None:
-                    self.get_questions(session)
-                    session[QCOUNTER] = 0
-                if session[QCOUNTER] == session[NUM_QUESTIONS]:
-                    session[STATE] = None
-                    session[QCOUNTER] = 0
-                    return "Поздравляем, игра закончилась! Напишите, когда захотите поиграть еще!"
-                session[QCOUNTER] += 1
-                return session[QUESTIONS_LIST][session[QCOUNTER] - 1]['question']
-            else:
+            val = int(ans)
+            if val == 1:
+                return "True"
+            if val == 2:
+                return "False"
+        except:
+            return None
+
+    def Handle(self, session, text: str):
+        if STATE not in session or session[STATE] is None:
+            session[STATE] = QUESTIONS
+            return "Сколько вопросов будем играть?"
+        elif session[STATE] == QUESTIONS:
+            try:
+                session[NUM_QUESTIONS] = int(text)
+            except:
+                return "Не поняла, введи число заново"
+            session[STATE] = GAME
+            return "Ищу вопросы. Приготовьтесь! Когда будете готовы, напишите что-нибудь."
+        elif session[STATE] == GAME:
+            prefix = ""
+            if session[WAITING_FOR_ANSWER]:
+                ans = self.recognize_ans(text)
+                if ans is None:
+                    return "Не поняла твой ответ. Введи 1, если правда, и 2, если ложь!"
+                session[WAITING_FOR_ANSWER] = False
+                if ans == session[QUESTIONS_LIST][session[QCOUNTER] - 1]['correct_answer']:
+                    prefix = "Правильно! "
+                else:
+                    prefix = "Неправильно! "
+
+            if QCOUNTER not in session or session[QCOUNTER] == 0 or session[QCOUNTER] is None:
+                self.get_questions(session)
+                session[QCOUNTER] = 0
+                session[WAITING_FOR_ANSWER] = False
+            if session[QCOUNTER] == session[NUM_QUESTIONS]:
                 session[STATE] = None
-                return "Что-то пошло не так. Давайте заново. Ответьте что-нибудь"
-        except Exception as e:
-            print(e)
+                session[QCOUNTER] = 0
+                session[WAITING_FOR_ANSWER] = False
+                return prefix + "Поздравляем, игра закончилась! Напишите, когда захотите поиграть еще!"
+            session[QCOUNTER] += 1
+            session[WAITING_FOR_ANSWER] = True
+            return prefix + session[QUESTIONS_LIST][session[QCOUNTER] - 1]['question']
+        else:
             session[STATE] = None
-            session[QCOUNTER] = 0
-            return "Я перегрелась. Скажи что-нибудь, давай начнем заново!"
+            return "Что-то пошло не так. Давайте заново. Ответьте что-нибудь"
