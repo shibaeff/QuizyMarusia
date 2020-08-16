@@ -1,3 +1,5 @@
+[![Run on Repl.it](https://repl.it/badge/github/shibaeff/QuizyMarusia)](https://repl.it/github/shibaeff/QuizyMarusia)
+
 Run app simply:
 ``python3 app.py``.<br>
 If needed install dependencies:

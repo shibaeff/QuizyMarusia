@@ -20,7 +20,6 @@ def get_bot_response():
 
 if __name__ == "__main__":
     app.secret_key = "test"
-    print(os.environ["DEBUG"])
     if "DEBUG" not in os.environ:
         app.run()
     else :
