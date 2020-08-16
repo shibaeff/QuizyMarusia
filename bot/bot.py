@@ -9,6 +9,7 @@ GAME = "3"
 WAITING_FOR_ANSWER = "4"
 QUESTIONS_LIST = "questions"
 QCOUNTER = "qcounter"
+SCORE = "score"
 
 
 class Bot(object):
@@ -33,9 +34,9 @@ class Bot(object):
             return None
 
     def Handle(self, session, text: str):
-        if STATE not in session or session[STATE] is None:
+        if STATE not in session or session[STATE] is None or text.lower() == "сброс":
             session[STATE] = QUESTIONS
-            return "Сколько вопросов будем играть?"
+            return "Начинаем игру. Сколько вопросов будем играть?"
         elif session[STATE] == QUESTIONS:
             try:
                 session[NUM_QUESTIONS] = int(text)
@@ -45,13 +46,14 @@ class Bot(object):
             return "Ищу вопросы. Приготовьтесь! Когда будете готовы, напишите что-нибудь."
         elif session[STATE] == GAME:
             prefix = ""
-            if session[WAITING_FOR_ANSWER]:
+            if WAITING_FOR_ANSWER in session and session[WAITING_FOR_ANSWER]:
                 ans = self.recognize_ans(text)
                 if ans is None:
                     return "Не поняла твой ответ. Введи 1, если правда, и 2, если ложь!"
                 session[WAITING_FOR_ANSWER] = False
                 if ans == session[QUESTIONS_LIST][session[QCOUNTER] - 1]['correct_answer']:
                     prefix = "Правильно! "
+                    session[SCORE] += 1
                 else:
                     prefix = "Неправильно! "
 
@@ -59,11 +61,15 @@ class Bot(object):
                 self.get_questions(session)
                 session[QCOUNTER] = 0
                 session[WAITING_FOR_ANSWER] = False
+                session[SCORE] = 0
             if session[QCOUNTER] == session[NUM_QUESTIONS]:
                 session[STATE] = None
                 session[QCOUNTER] = 0
+                old_score = session[SCORE]
+                session[SCORE] = 0
                 session[WAITING_FOR_ANSWER] = False
-                return prefix + "Поздравляем, игра закончилась! Напишите, когда захотите поиграть еще!"
+                return prefix + ("Поздравляем, игра закончилась! Вы набрали %d очков. "
+                                 "Напишите, когда захотите поиграть еще!" % (old_score))
             session[QCOUNTER] += 1
             session[WAITING_FOR_ANSWER] = True
             return prefix + session[QUESTIONS_LIST][session[QCOUNTER] - 1]['question']
